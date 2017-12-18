@@ -1,57 +1,70 @@
 contract Agreement {
-    
-    address client1;
-    address client2;
-    bool client1Confirmed = false;
-    bool client2Confirmed = false;
-    
-    modifier onlyClient1 {
-        require(msg.sender == client1);
-        _;
-    }
-    
-    modifier client1Assigned {
-         require(client1 != 0);
+ 
+    bool registerationOpen = true;
+    address public owner;
+    address[] public clients;
+    mapping(address => bool) public clientsConfirmed;
+     
+    modifier onlyOwner {
+         require (msg.sender == owner);
          _;
-    }
-    
-    modifier client2Assigned {
-         require(client2 != 0);
+     }
+     
+     modifier onlyClient {
+         require (isAClient(msg.sender));
          _;
-    }
-    
-    modifier client1Unassigned {
-         require(client1 == 0);
+     }
+     
+     modifier clientsRegistered {
+         require (clients.length > 0);
          _;
-    }
+     }
     
-    modifier client2Unassigned {
-         require(client2 == 0);
+     modifier registerOpen{
+         require(registerationOpen);
          _;
+     }
+     
+      modifier registerClosed{
+         require(!registerationOpen);
+         _;
+     }
+    
+     function Agreement() public {
+          owner = msg.sender;
+     } 
+    
+    function isAClient(address client) internal constant returns(bool){
+        for(uint i=0; i<clients.length; i++){
+            if (clients[i] == client) {
+                return true;
+            }
+            return false;
+        }
+    }
+     
+    function registerClient(address client) public onlyOwner registerOpen {
+         /* Not previously registered*/
+         require(!isAClient(client));
+         /*add to list and increment client count*/
+         clients.push(client);
+     }
+     
+    function confirm() public onlyClient {
+        clientsConfirmed[msg.sender] = true;
     }
     
-     modifier onlyClient2 {
-        require(msg.sender == client2);
-        _;
+    function closeRegistration() public onlyOwner{
+        registerationOpen =false;
     }
     
-    function registerClient1() public client1Unassigned {
-        client1 = msg.sender;
+    function agreementReached() public constant clientsRegistered registerClosed returns (bool) {
+        for(uint i=0; i<clients.length; i++){
+            if (!clientsConfirmed[clients[i]]) {
+                return false;
+            }
+            return true;
+        }
     }
     
-    function registerClient2() public client2Unassigned {
-        client2 = msg.sender;
-    }
-    
-    function confrimClient1() public client1Assigned onlyClient1 {
-        client1Confirmed = true;
-    }
-    
-    function confrimClient2() public client2Assigned onlyClient2 {
-        client2Confirmed = true;
-    }
-    
-    function agreementReached() public constant returns(bool) {
-        return (client1Confirmed == true && client2Confirmed == true);
-    }
-}
+}    
