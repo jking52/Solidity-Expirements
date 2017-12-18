@@ -1,6 +1,6 @@
 contract Agreement {
  
-    bool registerationOpen = true;
+    bool registrationOpen = true;
     address public owner;
     address[] public clients;
     mapping(address => bool) public clientsConfirmed;
@@ -21,12 +21,12 @@ contract Agreement {
      }
     
      modifier registerOpen{
-         require(registerationOpen);
+         require(registrationOpen);
          _;
      }
      
       modifier registerClosed{
-         require(!registerationOpen);
+         require(!registrationOpen);
          _;
      }
     
@@ -48,14 +48,15 @@ contract Agreement {
          require(!isAClient(client));
          /*add to list and increment client count*/
          clients.push(client);
+         clientsConfirmed[client] = false;
      }
      
     function confirm() public onlyClient {
         clientsConfirmed[msg.sender] = true;
     }
     
-    function closeRegistration() public onlyOwner{
-        registerationOpen =false;
+    function closeRegistration() public onlyOwner registerOpen {
+        registrationOpen =false;
     }
     
     function agreementReached() public constant clientsRegistered registerClosed returns (bool) {
